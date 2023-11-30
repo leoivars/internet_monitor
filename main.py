@@ -13,6 +13,7 @@ while True:
   
     if time_error ==0:
         logging.info('Internet is working')
+        i.mail_new_ips()
     else:
         logging.error(f'Interneet in NO working since {time_error}') 
 

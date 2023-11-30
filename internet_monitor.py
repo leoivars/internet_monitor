@@ -28,15 +28,18 @@ class Internet_monitor:
         self.internet_error = False
         self.last_ip = self.ip
         self.ip = self.what_is_my_ip.get_ip()
-        
         if self.ip != self.last_ip:
             self.add_ip_to_cache(self.ip)
-            ip_stat = self.get_ip_from_cache(self.ip)
-            if ip_stat['cant'] < 3:
-                
+
+    def mail_new_ips(self):
+        for ip, data in self.sorted_ips():
+            if not data['mail']:
+                logging.info(f'new ip: {self.ip}')    
                 msg = self.get_ips_cache_str()
-                self.mailer.send_mail(f'New IP: {self.ip}',msg)
-            logging.info(f'{self.ip}')    
+                success = self.mailer.send_mail(f'New IP: {ip}',msg)
+                if success:
+                    self.ips_cache[ip]['mail']=True
+                    break
 
     def get_internet_error_time(self):
         if self.internet_error:
@@ -46,10 +49,11 @@ class Internet_monitor:
 
     def add_ip_to_cache(self,ip):
         if ip in self.ips_cache:
-            self.ips_cache[ip]['time'] = time.time()
-            self.ips_cache[ip]['cant'] += 1 
+            self.ips_cache[ip]['time'] = time.time()  #time of new ip detected
+            self.ips_cache[ip]['qty'] += 1            #quantity that ip has been assigned
+            self.ips_cache[ip]['mail'] = False        #False = An email notifying about the new IP has not been successfully sent.
         else:
-            self.ips_cache[ip]={'time':time.time(),'cant':1}    
+            self.ips_cache[ip]={'time':time.time(),'qty':1,'mail':False}    
 
     def get_ip_from_cache(self,ip):
         if ip in self.ips_cache:
@@ -57,25 +61,19 @@ class Internet_monitor:
         else:
             None
 
+    def sorted_ips(self):
+        # Sort the dictionary by the 'time' value in each subdictionary.
+        return sorted(self.ips_cache.items(), key=lambda x: x[1]['time'],reverse=True)  
+    
     def get_ips_cache_str(self):
-        # Ordena el diccionario por el valor de 'time' en cada subdiccionario
-        ips_ordenados = sorted(self.ips_cache.items(), key=lambda x: x[1]['time'],reverse=True)  
-        # Ahora ips_ordenados es una lista de tuplas ordenadas por 'time'
-        # Cada tupla contiene (clave, valor) del diccionario original
         ret=''
-        for ip, data in ips_ordenados:
-            tiempo_legible = datetime.datetime.fromtimestamp(data['time']).strftime('%Y-%m-%d %H:%M:%S')
-            ret += f'IP: {ip}, Tiempo: {tiempo_legible}, Cantidad: {data["cant"]}\n'
+        for ip, data in self.sorted_ips():
+            huma_time = datetime.datetime.fromtimestamp(data['time']).strftime('%Y-%m-%d %H:%M:%S')
+            ret += f'IP: {ip}, Time: {huma_time}, qty: {data["qty"]}\n'
         return ret          
 
 
                 
-
-
-
-
-
-
 
 
 
