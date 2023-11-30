@@ -25,6 +25,8 @@ class Whatis_my_ip:
                    "https://jsonip.com/",
                    "https://www.trackip.net/ip",
                   ]
+        self.headers = {'Cache-Control': 'no-cache', 'Pragma': 'no-cache', 'Expires': '0'}
+
         self.nexurl = random.randint(0, len(self.urls)-1)
 
     def get_next_url(self):
@@ -48,7 +50,7 @@ class Whatis_my_ip:
 
     def ip_from_url(self,url):
         try: 
-            respose = get(url).content.decode('utf8')
+            respose = get(url,headers=self.headers).content.decode('utf8')
             if "{" in respose:
                 ip = self.parse_ip_from_json(json.loads(respose.lower()))
             else:
