@@ -15,6 +15,7 @@ class Mailer:
         self.send_mails =  cfg.send_mails
 
     def send_mail(self,title,body):
+        success = False
         if not self.send_mails:
             return
     
@@ -37,8 +38,10 @@ class Mailer:
             if problems:
                 logging.error(problems)
             else:
-                logging.info('Sent.')     
+                logging.info('Sent.')
+                success = True
+
         except Exception as e:
                 err_msg = "Error sending email"
                 logging.error( err_msg,str(e) )
-                
+        return success        
